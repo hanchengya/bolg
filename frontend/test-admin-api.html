@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试管理员API</title>
+</head>
+<body>
+    <h1>测试管理员API</h1>
+    <button onclick="testStats()">测试统计API</button>
+    <button onclick="testUsers()">测试用户API</button>
+    <button onclick="testMovies()">测试电影API</button>
+    <pre id="result"></pre>
+
+    <script>
+        const token = localStorage.getItem('access_token');
+        const baseURL = 'http://localhost:8000/api/v1';
+
+        async function testStats() {
+            try {
+                const response = await fetch(`${baseURL}/admin/stats/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                document.getElementById('result').textContent = 
+                    `Stats API (${response.status}):\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testUsers() {
+            try {
+                const response = await fetch(`${baseURL}/admin/users/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                document.getElementById('result').textContent = 
+                    `Users API (${response.status}):\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testMovies() {
+            try {
+                const response = await fetch(`${baseURL}/admin/movies/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                document.getElementById('result').textContent = 
+                    `Movies API (${response.status}):\n` + JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('result').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        console.log('Token:', token);
+    </script>
+</body>
+</html>

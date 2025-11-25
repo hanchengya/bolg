@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 自定义样式 */
+body {
+  @apply bg-bg-primary text-white;
+}
+
+/* 移除所有元素的 outline 和防止意外焦点 */
+*:not(input):not(textarea):not([contenteditable="true"]) {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+  caret-color: transparent !important;
+}
+
+/* 确保 div 不会意外变成可编辑状态 */
+div:not([contenteditable="true"]) {
+  user-select: text;
+  -webkit-user-select: text;
+  caret-color: transparent;
+}
+
+/* 防止图片和图片容器获得焦点 */
+img {
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  caret-color: transparent !important;
+}
+
+/* 针对 movie-detail 页面的特殊处理（但排除输入框） */
+.movie-detail *:not(input):not(textarea) {
+  caret-color: transparent !important;
+  outline: none !important;
+}
+
+/* 输入框和可编辑区域样式 - 确保光标正常显示 */
+input, textarea, [contenteditable="true"] {
+  caret-color: white !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  will-change: auto !important;
+  transform: translateZ(0) !important;
+  backface-visibility: hidden !important;
+}
+
+input:focus, textarea:focus, [contenteditable="true"]:focus {
+  caret-color: white !important;
+  outline: none !important;
+}
+
+/* 中文输入法状态下的样式稳定性 */
+input:focus::-webkit-input-placeholder,
+textarea:focus::-webkit-input-placeholder {
+  transition: none !important;
+}
+
+input:focus::placeholder,
+textarea:focus::placeholder {
+  transition: none !important;
+}
+
+/* 电影卡片样式 */
+.movie-card {
+  @apply bg-bg-tertiary rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105 cursor-pointer;
+}
+
+.movie-card img {
+  @apply w-full h-auto object-cover;
+}
+
+/* 评分星星样式 */
+.star-filled {
+  @apply text-accent-primary;
+}
+
+.star-empty {
+  @apply text-gray-600;
+}

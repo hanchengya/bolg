@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI训练流程 - 智能电影推荐系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 50px;
+            font-size: 1.1em;
+        }
+
+        .timeline {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .timeline-item:nth-child(odd) {
+            flex-direction: row;
+        }
+
+        .timeline-item:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .timeline-content {
+            width: calc(50% - 40px);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .timeline-content:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .timeline-item:nth-child(odd) .timeline-content {
+            margin-right: auto;
+        }
+
+        .timeline-item:nth-child(even) .timeline-content {
+            margin-left: auto;
+        }
+
+        .timeline-icon {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            z-index: 10;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+            50% { box-shadow: 0 5px 25px rgba(102, 126, 234, 0.8); }
+        }
+
+        .step-number {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .content-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: bold;
+            padding-left: 30px;
+        }
+
+        .content-desc {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .content-details {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin-top: 15px;
+        }
+
+        .content-details ul {
+            list-style: none;
+            color: #666;
+        }
+
+        .content-details li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .content-details li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 50px;
+            padding-top: 40px;
+            border-top: 2px solid #eee;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .problem-solutions {
+            margin-top: 50px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 15px;
+        }
+
+        .problem-solutions h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .problem-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease;
+        }
+
+        .problem-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .problem-icon {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .problem-title {
+            color: #e74c3c;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .solution-title {
+            color: #27ae60;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .problem-text, .solution-text {
+            color: #666;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e83e8c;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .timeline::before {
+                left: 30px;
+            }
+
+            .timeline-item {
+                flex-direction: column !important;
+                padding-left: 70px;
+            }
+
+            .timeline-content {
+                width: 100%;
+                margin: 0 !important;
+            }
+
+            .timeline-icon {
+                left: 30px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .problem-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI 模型训练与部署流程</h1>
+        <p class="subtitle">从数据准备到生产部署的完整 LoRA 微调流程</p>
+
+        <div class="timeline">
+            <!-- 步骤 1 -->
+            <div class="timeline-item">
+                <div class="timeline-icon">📊</div>
+                <div class="timeline-content">
+                    <div class="step-number">1</div>
+                    <div class="content-title">数据准备与清洗</div>
+                    <div class="content-desc">
+                        收集并整理训练数据，确保数据质量和格式统一
+                    </div>
+                    <div class="content-details">
+                        <ul>
+                            <li>豆瓣Top250电影数据：1352条</li>
+                            <li>《四川交院的生活》专项数据：15条</li>
+                            <li>杨丽老师人物信息：10条</li>
+                            <li>防幻觉训练样本：15条</li>
+                            <li>总计：<strong>1392条高质量数据</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤 2 -->
+            <div class="timeline-item">
+                <div class="timeline-icon">🏗️</div>
+                <div class="timeline-content">
+                    <div class="step-number">2</div>
+                    <div class="content-title">环境配置与优化</div>
+                    <div class="content-desc">
+                        解决硬件限制，优化训练环境
+                    </div>
+                    <div class="content-details">
+                        <ul>
+                            <li>GPU: NVIDIA RTX 4060 (8GB显存)</li>
+                            <li>设置D盘虚拟环境避免C盘空间不足</li>
+                            <li>配置HuggingFace镜像源</li>
+                            <li>启用梯度检查点节省显存</li>
+                            <li>混合精度训练 (FP16)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤 3 -->
+            <div class="timeline-item">
+                <div class="timeline-icon">🔧</div>
+                <div class="timeline-content">
+                    <div class="step-number">3</div>
+                    <div class="content-title">LoRA 配置与模型加载</div>
+                    <div class="content-desc">
+                        配置LoRA参数，加载DeepSeek-7B基座模型
+                    </div>
+                    <div class="content-details">
+                        <ul>
+                            <li>基座模型: deepseek-ai/deepseek-llm-7b-chat</li>
+                            <li>LoRA秩 (r): 16</li>
+                            <li>LoRA alpha: 32</li>
+                            <li>目标模块: q_proj, k_proj, v_proj, o_proj</li>
+                            <li>Dropout: 0.05</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤 4 -->
+            <div class="timeline-item">
+                <div class="timeline-icon">🚀</div>
+                <div class="timeline-content">
+                    <div class="step-number">4</div>
+                    <div class="content-title">模型训练</div>
+                    <div class="content-desc">
+                        执行30轮充分训练，监控损失下降
+                    </div>
+                    <div class="content-details">
+                        <ul>
+                            <li>训练轮数: 30 epochs</li>
+                            <li>学习率: 5e-4</li>
+                            <li>批次大小: 8 (GPU) / 4 (CPU)</li>
+                            <li>梯度累积步数: 16</li>
+                            <li>训练时长: 约2-3小时 (RTX 4060)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤 5 -->
+            <div class="timeline-item">
+                <div class="timeline-icon">🔄</div>
+                <div class="timeline-content">
+                    <div class="step-number">5</div>
+                    <div class="content-title">模型合并与转换</div>
+                    <div class="content-desc">
+                        将LoRA权重合并到基座模型，转换为GGUF格式
+                    </div>
+                    <div class="content-details">
+                        <ul>
+                            <li>合并LoRA权重到基座模型</li>
+                            <li>转换为GGUF格式 (量化: Q8_0)</li>
+                            <li>模型大小: 约7GB</li>
+                            <li>保持精度同时减小体积</li>
+                            <li>优化推理速度</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤 6 -->
+            <div class="timeline-item">
+                <div class="timeline-icon">📤</div>
+                <div class="timeline-content">
+                    <div class="step-number">6</div>
+                    <div class="content-title">上传与部署</div>
+                    <div class="content-desc">
+                        上传模型到服务器，创建Ollama服务
+                    </div>
+                    <div class="content-details">
+                        <ul>
+                            <li>SCP上传到服务器 (10.5.80.8)</li>
+                            <li>创建Modelfile配置</li>
+                            <li>使用Ollama创建模型实例</li>
+                            <li>配置Django后端连接</li>
+                            <li>测试API响应</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤 7 -->
+            <div class="timeline-item">
+                <div class="timeline-icon">✅</div>
+                <div class="timeline-content">
+                    <div class="step-number">7</div>
+                    <div class="content-title">测试与验证</div>
+                    <div class="content-desc">
+                        验证模型效果，确保不出现幻觉
+                    </div>
+                    <div class="content-details">
+                        <ul>
+                            <li>测试《四川交院的生活》问答</li>
+                            <li>验证杨丽老师信息准确性</li>
+                            <li>检查是否会编造信息</li>
+                            <li>测试电影推荐准确度</li>
+                            <li>性能基准测试 (2-3秒/次)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 训练统计 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">1,392</div>
+                <div class="stat-label">训练数据条数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">30</div>
+                <div class="stat-label">训练轮数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">7B</div>
+                <div class="stat-label">模型参数量</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">8GB</div>
+                <div class="stat-label">GPU 显存</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">2-3h</div>
+                <div class="stat-label">训练时长</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">2-3s</div>
+                <div class="stat-label">推理速度</div>
+            </div>
+        </div>
+
+        <!-- 问题与解决方案 -->
+        <div class="problem-solutions">
+            <h2>⚠️ 关键问题与解决方案</h2>
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <div class="problem-icon">💾</div>
+                    <div class="problem-title">问题 1: C盘空间不足</div>
+                    <div class="problem-text">
+                        DeepSeek-7B模型需要10GB空间，但C盘只剩6GB
+                    </div>
+                    <div class="solution-title">✅ 解决方案</div>
+                    <div class="solution-text">
+                        设置环境变量将所有缓存重定向到D盘：<br>
+                        <code>HF_HOME=D:\huggingface_cache</code><br>
+                        <code>TRANSFORMERS_CACHE=D:\huggingface_cache</code>
+                    </div>
+                </div>
+
+                <div class="problem-card">
+                    <div class="problem-icon">🎮</div>
+                    <div class="problem-title">问题 2: GPU显存不足</div>
+                    <div class="problem-text">
+                        RTX 4060只有8GB显存，完整加载需要14GB
+                    </div>
+                    <div class="solution-title">✅ 解决方案</div>
+                    <div class="solution-text">
+                        启用梯度检查点 + 混合精度训练 + 增加梯度累积：<br>
+                        <code>gradient_checkpointing=True</code><br>
+                        <code>fp16=True</code><br>
+                        <code>gradient_accumulation_steps=16</code>
+                    </div>
+                </div>
+
+                <div class="problem-card">
+                    <div class="problem-icon">🌐</div>
+                    <div class="problem-title">问题 3: 网络下载超时</div>
+                    <div class="problem-text">
+                        从HuggingFace下载模型经常超时中断
+                    </div>
+                    <div class="solution-title">✅ 解决方案</div>
+                    <div class="solution-text">
+                        使用国内镜像源加速下载：<br>
+                        <code>HF_ENDPOINT=https://hf-mirror.com</code><br>
+                        清理损坏的缓存文件
+                    </div>
+                </div>
+
+                <div class="problem-card">
+                    <div class="problem-icon">🎭</div>
+                    <div class="problem-title">问题 4: 模型幻觉</div>
+                    <div class="problem-text">
+                        AI编造不存在的导演、演员等信息
+                    </div>
+                    <div class="solution-title">✅ 解决方案</div>
+                    <div class="solution-text">
+                        1. 降低生成随机性 (<code>temperature=0.3</code>)<br>
+                        2. 添加防幻觉训练样本<br>
+                        3. 系统提示词强调"不编造信息"<br>
+                        4. 30轮充分训练
+                    </div>
+                </div>
+
+                <div class="problem-card">
+                    <div class="problem-icon">🔧</div>
+                    <div class="problem-title">问题 5: 设备不匹配</div>
+                    <div class="problem-text">
+                        模型参数分布在CPU和GPU导致训练失败
+                    </div>
+                    <div class="solution-title">✅ 解决方案</div>
+                    <div class="solution-text">
+                        强制所有参数在单GPU上：<br>
+                        <code>device_map={"": 0}</code><br>
+                        禁用自动offload
+                    </div>
+                </div>
+
+                <div class="problem-card">
+                    <div class="problem-icon">📝</div>
+                    <div class="problem-title">问题 6: Windows编码错误</div>
+                    <div class="problem-text">
+                        PowerShell中文乱码，emoji显示为问号
+                    </div>
+                    <div class="solution-title">✅ 解决方案</div>
+                    <div class="solution-text">
+                        强制UTF-8编码输出：<br>
+                        <code>sys.stdout = io.TextIOWrapper(</code><br>
+                        <code>&nbsp;&nbsp;sys.stdout.buffer, encoding='utf-8')</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

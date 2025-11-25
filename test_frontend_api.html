@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前端API测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1d29;
+            color: #fff;
+        }
+        h1 { color: #FFB800; }
+        .section {
+            background: #252a35;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success { color: #10B981; }
+        .error { color: #EF4444; }
+        .movie-card {
+            background: #1a1d29;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 3px solid #FFB800;
+        }
+        button {
+            background: #E50914;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #b20710;
+        }
+        pre {
+            background: #0F1419;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .loading {
+            color: #9CA3AF;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎬 电影博客前端API测试</h1>
+
+    <div class="section">
+        <h2>测试控制面板</h2>
+        <button onclick="testAllAPIs()">运行所有测试</button>
+        <button onclick="testMoviesList()">测试电影列表</button>
+        <button onclick="testTopRated()">测试高分电影</button>
+        <button onclick="testSearch()">测试搜索</button>
+        <button onclick="testMovieDetail()">测试电影详情</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        const resultsDiv = document.getElementById('results');
+
+        function log(title, content, type = 'info') {
+            const section = document.createElement('div');
+            section.className = 'section';
+            section.innerHTML = `
+                <h3 class="${type === 'success' ? 'success' : type === 'error' ? 'error' : ''}">${title}</h3>
+                <div>${content}</div>
+            `;
+            resultsDiv.appendChild(section);
+            // 滚动到底部
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+        }
+
+        async function testMoviesList() {
+            log('测试：电影列表API', '<div class="loading">正在请求...</div>');
+            
+            try {
+                const response = await fetch(`${API_BASE}/movies/`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const movies = data.results || data;
+                    const movieCards = movies.slice(0, 5).map(movie => `
+                        <div class="movie-card">
+                            <strong>${movie.title}</strong><br>
+                            排名: ${movie.rank} | 评分: ${movie.douban_rating}<br>
+                            <img src="${movie.poster}" style="max-width: 100px; margin-top: 10px;">
+                        </div>
+                    `).join('');
+                    
+                    log('✅ 电影列表API', `
+                        <div class="success">成功获取 ${data.count || movies.length} 部电影！</div>
+                        <p>显示前5部电影：</p>
+                        ${movieCards}
+                    `, 'success');
+                } else {
+                    log('❌ 电影列表API', `<div class="error">失败: ${response.status}</div>`, 'error');
+                }
+            } catch (error) {
+                log('❌ 电影列表API', `<div class="error">错误: ${error.message}</div>`, 'error');
+            }
+        }
+
+        async function testTopRated() {
+            log('测试：高分电影API', '<div class="loading">正在请求...</div>');
+            
+            try {
+                const response = await fetch(`${API_BASE}/movies/top_rated/`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const movies = Array.isArray(data) ? data : data.results || [];
+                    const movieList = movies.map((movie, i) => `
+                        <div>${i + 1}. ${movie.title} - ⭐${movie.douban_rating}</div>
+                    `).join('');
+                    
+                    log('✅ 高分电影API', `
+                        <div class="success">成功获取 ${movies.length} 部高分电影！</div>
+                        ${movieList}
+                    `, 'success');
+                } else {
+                    log('❌ 高分电影API', `<div class="error">失败: ${response.status}</div>`, 'error');
+                }
+            } catch (error) {
+                log('❌ 高分电影API', `<div class="error">错误: ${error.message}</div>`, 'error');
+            }
+        }
+
+        async function testSearch() {
+            log('测试：搜索API', '<div class="loading">正在搜索"肖申克"...</div>');
+            
+            try {
+                const response = await fetch(`${API_BASE}/movies/search/?q=肖申克`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const movies = Array.isArray(data) ? data : data.results || [];
+                    const movieList = movies.map(movie => `
+                        <div class="movie-card">
+                            ${movie.title} - ⭐${movie.douban_rating}
+                        </div>
+                    `).join('');
+                    
+                    log('✅ 搜索API', `
+                        <div class="success">找到 ${movies.length} 部电影！</div>
+                        ${movieList}
+                    `, 'success');
+                } else {
+                    log('❌ 搜索API', `<div class="error">失败: ${response.status}</div>`, 'error');
+                }
+            } catch (error) {
+                log('❌ 搜索API', `<div class="error">错误: ${error.message}</div>`, 'error');
+            }
+        }
+
+        async function testMovieDetail() {
+            log('测试：电影详情API', '<div class="loading">正在获取电影详情...</div>');
+            
+            try {
+                const response = await fetch(`${API_BASE}/movies/1/`);
+                const movie = await response.json();
+                
+                if (response.ok) {
+                    log('✅ 电影详情API', `
+                        <div class="success">成功获取电影详情！</div>
+                        <div class="movie-card">
+                            <strong>${movie.title}</strong><br>
+                            原标题: ${movie.original_title}<br>
+                            导演: ${movie.director}<br>
+                            类型: ${movie.genres}<br>
+                            评分: ⭐${movie.douban_rating}<br>
+                            简介: ${movie.summary ? movie.summary.substring(0, 150) + '...' : '暂无'}
+                        </div>
+                    `, 'success');
+                } else {
+                    log('❌ 电影详情API', `<div class="error">失败: ${response.status}</div>`, 'error');
+                }
+            } catch (error) {
+                log('❌ 电影详情API', `<div class="error">错误: ${error.message}</div>`, 'error');
+            }
+        }
+
+        async function testAllAPIs() {
+            clearResults();
+            log('开始测试', '<div class="loading">正在运行所有API测试...</div>');
+            
+            await testMoviesList();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testTopRated();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testSearch();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testMovieDetail();
+            
+            log('测试完成', '<div class="success">✅ 所有测试已完成！</div>', 'success');
+        }
+
+        // 页面加载时自动运行测试
+        window.addEventListener('load', () => {
+            setTimeout(testAllAPIs, 500);
+        });
+    </script>
+</body>
+</html>

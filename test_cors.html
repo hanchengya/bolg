@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS测试 - 电影API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1d29;
+            color: #fff;
+        }
+        h1 { color: #FFB800; }
+        .test-section {
+            background: #252a35;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #E50914;
+        }
+        .success { 
+            color: #10B981; 
+            font-weight: bold;
+        }
+        .error { 
+            color: #EF4444; 
+            font-weight: bold;
+        }
+        button {
+            background: #E50914;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #b20710;
+        }
+        pre {
+            background: #0F1419;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            max-height: 400px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .status.ok {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10B981;
+        }
+        .status.fail {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #EF4444;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎬 电影API CORS测试</h1>
+    <p>此页面用于测试前端能否正常访问后端API（跨域请求）</p>
+
+    <div class="test-section">
+        <h2>测试控制</h2>
+        <button onclick="testMovieList()">测试电影列表API</button>
+        <button onclick="testTopRated()">测试高分电影API</button>
+        <button onclick="testMovieDetail()">测试电影详情API</button>
+        <button onclick="testAll()">运行所有测试</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+        const resultsDiv = document.getElementById('results');
+
+        function log(title, content, isSuccess = null) {
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            
+            let statusClass = '';
+            let statusText = '';
+            if (isSuccess === true) {
+                statusClass = 'ok';
+                statusText = '✅ 成功';
+            } else if (isSuccess === false) {
+                statusClass = 'fail';
+                statusText = '❌ 失败';
+            }
+            
+            section.innerHTML = `
+                <h3>${title}</h3>
+                ${statusText ? `<div class="status ${statusClass}">${statusText}</div>` : ''}
+                <div>${content}</div>
+            `;
+            resultsDiv.appendChild(section);
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+        }
+
+        async function testMovieList() {
+            log('测试1: 电影列表API', '正在请求 /api/v1/movies/...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/movies/`);
+                const data = await response.json();
+                
+                if (response.ok && data.count > 0) {
+                    const firstMovie = data.results[0];
+                    log('测试1: 电影列表API', `
+                        <div class="success">API调用成功！</div>
+                        <p><strong>电影总数:</strong> ${data.count}</p>
+                        <p><strong>首部电影:</strong> ${firstMovie.title}</p>
+                        <p><strong>评分:</strong> ${firstMovie.douban_rating}</p>
+                        <p><strong>排名:</strong> ${firstMovie.rank}</p>
+                        <pre>${JSON.stringify(firstMovie, null, 2)}</pre>
+                    `, true);
+                } else {
+                    log('测试1: 电影列表API', `
+                        <div class="error">API返回异常</div>
+                        <p>状态码: ${response.status}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `, false);
+                }
+            } catch (error) {
+                log('测试1: 电影列表API', `
+                    <div class="error">请求失败！</div>
+                    <p><strong>错误类型:</strong> ${error.name}</p>
+                    <p><strong>错误信息:</strong> ${error.message}</p>
+                    <p><strong>可能原因:</strong></p>
+                    <ul>
+                        <li>后端服务未启动</li>
+                        <li>CORS配置不正确</li>
+                        <li>网络连接问题</li>
+                    </ul>
+                `, false);
+            }
+        }
+
+        async function testTopRated() {
+            log('测试2: 高分电影API', '正在请求 /api/v1/movies/top_rated/...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/movies/top_rated/`);
+                const data = await response.json();
+                
+                if (response.ok && Array.isArray(data) && data.length > 0) {
+                    const movieList = data.slice(0, 5).map((m, i) => 
+                        `${i + 1}. ${m.title} - ⭐${m.douban_rating}`
+                    ).join('<br>');
+                    
+                    log('测试2: 高分电影API', `
+                        <div class="success">API调用成功！</div>
+                        <p><strong>返回数量:</strong> ${data.length}</p>
+                        <p><strong>前5部电影:</strong></p>
+                        <div style="padding: 10px; background: #0F1419; border-radius: 5px;">
+                            ${movieList}
+                        </div>
+                    `, true);
+                } else {
+                    log('测试2: 高分电影API', `
+                        <div class="error">数据格式异常</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `, false);
+                }
+            } catch (error) {
+                log('测试2: 高分电影API', `
+                    <div class="error">请求失败: ${error.message}</div>
+                `, false);
+            }
+        }
+
+        async function testMovieDetail() {
+            log('测试3: 电影详情API', '正在请求 /api/v1/movies/1/...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/movies/1/`);
+                const movie = await response.json();
+                
+                if (response.ok && movie.id) {
+                    log('测试3: 电影详情API', `
+                        <div class="success">API调用成功！</div>
+                        <p><strong>标题:</strong> ${movie.title}</p>
+                        <p><strong>导演:</strong> ${movie.director}</p>
+                        <p><strong>评分:</strong> ⭐${movie.douban_rating}</p>
+                        <p><strong>简介:</strong> ${movie.summary ? movie.summary.substring(0, 100) + '...' : '暂无'}</p>
+                        <pre>${JSON.stringify(movie, null, 2)}</pre>
+                    `, true);
+                } else {
+                    log('测试3: 电影详情API', `
+                        <div class="error">数据异常</div>
+                        <pre>${JSON.stringify(movie, null, 2)}</pre>
+                    `, false);
+                }
+            } catch (error) {
+                log('测试3: 电影详情API', `
+                    <div class="error">请求失败: ${error.message}</div>
+                `, false);
+            }
+        }
+
+        async function testAll() {
+            clearResults();
+            log('开始测试', '<div style="color: #9CA3AF;">正在运行所有CORS测试...</div>');
+            
+            await testMovieList();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testTopRated();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testMovieDetail();
+            
+            log('测试完成', '<div class="success">✅ 所有测试已完成！请查看上方结果。</div>', true);
+        }
+
+        // 页面加载时自动运行测试
+        window.addEventListener('load', () => {
+            setTimeout(testAll, 500);
+        });
+    </script>
+</body>
+</html>

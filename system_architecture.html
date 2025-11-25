@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统架构图 - 智能电影推荐社区系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        .architecture {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            margin-top: 30px;
+        }
+
+        .layer {
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+
+        .component {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            text-align: center;
+            min-width: 280px;
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
+        }
+
+        .component-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .component-desc {
+            font-size: 0.95em;
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+
+        .component-tech {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.3);
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .backend-layer {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .backend-component {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .storage-layer {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .storage-component {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            flex: 1;
+            max-width: 350px;
+        }
+
+        .arrow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 40px;
+            position: relative;
+        }
+
+        .arrow svg {
+            width: 40px;
+            height: 40px;
+            fill: #667eea;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+
+        .tech-stack {
+            margin-top: 50px;
+            padding-top: 40px;
+            border-top: 2px solid #eee;
+        }
+
+        .tech-stack h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .tech-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .tech-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .tech-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .tech-list {
+            list-style: none;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .tech-list li {
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .tech-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .features {
+            margin-top: 50px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 15px;
+        }
+
+        .features h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .feature-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .feature-desc {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .backend-layer, .storage-layer {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .component {
+                min-width: 100%;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 智能电影推荐社区系统架构</h1>
+        <p class="subtitle">基于 Django + Vue.js + AI 的现代化前后端分离架构</p>
+
+        <div class="architecture">
+            <!-- 前端层 -->
+            <div class="layer">
+                <div class="component">
+                    <div class="component-title">🖥️ 前端层 (Vue 3)</div>
+                    <div class="component-desc">
+                        响应式单页应用，现代化UI设计<br>
+                        组件化开发，状态管理
+                    </div>
+                    <div class="component-tech">
+                        Vue 3 + Vite + Pinia + Tailwind CSS
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                </svg>
+            </div>
+
+            <!-- 后端层 -->
+            <div class="layer backend-layer">
+                <div class="component backend-component">
+                    <div class="component-title">⚙️ Django REST API</div>
+                    <div class="component-desc">
+                        RESTful API设计<br>
+                        JWT认证、权限控制<br>
+                        电影、用户、影评管理
+                    </div>
+                    <div class="component-tech">
+                        Django 4.2 + DRF 3.14 + JWT
+                    </div>
+                </div>
+
+                <div class="component backend-component">
+                    <div class="component-title">🤖 AI 服务层</div>
+                    <div class="component-desc">
+                        智能聊天助手<br>
+                        电影推荐引擎<br>
+                        自然语言问答
+                    </div>
+                    <div class="component-tech">
+                        Ollama + LoRA微调模型
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                </svg>
+            </div>
+
+            <!-- 数据层 -->
+            <div class="layer storage-layer">
+                <div class="component storage-component">
+                    <div class="component-title">💾 MySQL 数据库</div>
+                    <div class="component-desc">
+                        关系型数据存储<br>
+                        用户、电影、影评数据<br>
+                        索引优化、事务支持
+                    </div>
+                    <div class="component-tech">
+                        MySQL 8.0+
+                    </div>
+                </div>
+
+                <div class="component storage-component">
+                    <div class="component-title">🧠 AI 模型服务</div>
+                    <div class="component-desc">
+                        DeepSeek-7B 基座<br>
+                        LoRA微调权重<br>
+                        1392条训练数据
+                    </div>
+                    <div class="component-tech">
+                        Ollama + GGUF量化
+                    </div>
+                </div>
+
+                <div class="component storage-component">
+                    <div class="component-title">⚡ Redis 缓存</div>
+                    <div class="component-desc">
+                        高速缓存层<br>
+                        会话存储<br>
+                        热点数据缓存
+                    </div>
+                    <div class="component-tech">
+                        Redis 7+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 技术栈详情 -->
+        <div class="tech-stack">
+            <h2>🛠️ 技术栈详情</h2>
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <h3>前端技术</h3>
+                    <ul class="tech-list">
+                        <li>Vue.js 3.5.24</li>
+                        <li>Vite 7.2.2</li>
+                        <li>Vue Router 4.6.3</li>
+                        <li>Pinia 3.0.4</li>
+                        <li>Tailwind CSS 3.4.18</li>
+                        <li>Axios 1.13.2</li>
+                    </ul>
+                </div>
+
+                <div class="tech-card">
+                    <h3>后端技术</h3>
+                    <ul class="tech-list">
+                        <li>Python 3.12</li>
+                        <li>Django 4.2.7</li>
+                        <li>Django REST Framework 3.14.0</li>
+                        <li>MySQL 8.0+</li>
+                        <li>Redis 7+</li>
+                        <li>JWT 认证</li>
+                    </ul>
+                </div>
+
+                <div class="tech-card">
+                    <h3>AI 技术</h3>
+                    <ul class="tech-list">
+                        <li>Ollama 模型推理</li>
+                        <li>DeepSeek-7B-Chat</li>
+                        <li>LoRA 微调技术</li>
+                        <li>Transformers 4.x</li>
+                        <li>PyTorch 2.x (CUDA 11.8)</li>
+                        <li>GGUF 量化格式</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 核心特性 -->
+        <div class="features">
+            <h2>✨ 核心特性</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">🔐</div>
+                    <div class="feature-title">JWT 安全认证</div>
+                    <div class="feature-desc">Token刷新机制、权限控制、会话管理</div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🎨</div>
+                    <div class="feature-title">响应式设计</div>
+                    <div class="feature-desc">适配多端设备、流畅动画、现代UI</div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🤖</div>
+                    <div class="feature-title">AI 聊天助手</div>
+                    <div class="feature-desc">智能推荐、实时对话、准确问答</div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">数据可视化</div>
+                    <div class="feature-desc">评分统计、观影记录、趋势分析</div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🔍</div>
+                    <div class="feature-title">智能搜索</div>
+                    <div class="feature-desc">多维度筛选、关键词搜索、分类导航</div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">💬</div>
+                    <div class="feature-title">社区互动</div>
+                    <div class="feature-desc">影评发布、评论互动、点赞收藏</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
